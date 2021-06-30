@@ -1,0 +1,91 @@
+---
+- name: CFD Librairies for main applications
+  become: True
+  yum:
+    name:
+      - pax
+      - libSM
+      - libX11
+      - libXext
+      - libXt
+      - redhat-lsb-core
+      - libGLU
+      - libXrender.x86_64
+      - libXtst.x86_64
+      - motif-2.3.4-14.el7_5.x86_64
+      - mesa-libGLU-9.0.0-4.el7.x86_64
+      - mesa-libGLU
+      - mesa-libGL
+      - motif
+      - fontconfig
+      - fontconfig-devel
+      - libXext
+      - libXrender-devel.x86_64
+      - libXrender.x86_64
+      - mesa-libGL.x86_64
+      - tmux
+      - glibc.i686
+      - zlib.i686
+      - libxml2-devel 
+      - libxslt-devel
+      - python3-devel
+    state: present
+
+# tasks file for starccm
+
+- name: Create /nfs/scratch/starccm/install
+  become: true
+  file:
+    path: "/nfs/scratch/starccm/install"
+    state: directory
+    owner: opc
+    mode: 0770
+    group: opc
+    recurse: yes
+    
+- name: download starccm binaries
+  get_url: 
+    url: "{{starccm_binaries}}"  
+    dest: "/nfs/scratch/starccm/install"
+    mode: 0770
+
+- name: untar starccm binaries
+  unarchive: 
+    src: "{{ item }}" 
+    dest: "/nfs/scratch/starccm/install" 
+  with_fileglob:
+    - "/nfs/scratch/starccm/install/*"
+
+- name: install starccm
+  become: true 
+  shell: "./{{starccm_version}}.sh -i silent -DINSTALLDIR=/nfs/scratch/starccm/install"
+  args:
+    chdir: "/nfs/scratch/starccm/install/{{starccm_version}}"
+ 
+# Post Installation 
+
+- name: make work directory
+  ansible.builtin.file:
+    path: "/nfs/scratch/starccm/work"
+    state: directory
+    recurse: yes
+    owner: opc
+    group: opc
+    mode: '0777'
+
+- name: download model 
+  get_url: 
+    url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/OjEMcLVIPEVfnWsFAmdiqUYEAbnJn9w1fQp6L094tQc/n/hpc/b/starccm_benchmarks/o/lemans_poly_17m.amg.sim.tar"
+    dest: "/nfs/scratch/starccm/work"
+    mode: '0777' 
+
+- name: untar model
+  unarchive: 
+    src: "{{ item }}" 
+    dest: "/nfs/scratch/starccm/work" 
+  with_fileglob:
+    - "/nfs/scratch/starccm/work/*"
+
+
+
+
