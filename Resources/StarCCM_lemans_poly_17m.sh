@@ -2,7 +2,6 @@
 
 #GET BASIC SYSTEM INFO
 uid=`uuidgen | cut -c-8`
-UNIQUEID=""
 OS_VERS=`cat /etc/*-release | grep "PRETTY_NAME" | cut -d= -f2`
 OS_VERS=`echo "$OS_VERS" | sed -e 's/^"//' -e 's/"$//'`
 KERNEL_VERS=`uname -r`
@@ -23,17 +22,8 @@ POD=
 benchITS=
 CORES=
 PPN=
-COMMENT=""
 MACHINEFILE=/nfs/scratch/starccm/work
 MPI_NAME=intel
-INSTANCE=
-IMAGE_VERS=""
-IMAGE_OCID=""
-NETWORK=""
-REGION=""
-ENVIRONMENT="OCI"
-CUSTOMER_NAME="N/A"
-POC="NO"
 RDMA_INTERFACE=enp94s0f0
 TCP_INTERFACE=enp65s0f0 
 
@@ -77,8 +67,6 @@ BASE_EXECUTION_TIME=0
 BASE_CORES=0
 INIT_TEST="INIT"
 
-
-
 #LOG EVENT
 echo `date` | tee -a ${MPI_NAME}.${CORES}.${unique}.log
 #RUN SIMULATION
@@ -100,11 +88,8 @@ XML=`cat ${MPI_NAME}.${CORES}.${UNIQUEID}.log | grep 'Benchmark::Output file nam
 # Get the data that remains constant
 MPI_VERSION=`xmllint --xpath '//MpiType/text()' $XML`
 StarCCM_Version=`xmllint --xpath '//Version/text()' $XML`
-# CMD_LINE=`xmllint --xpath '//ServerCommand/text()' $XML`
-# CMD_LINE=$(echo "$CMD_LINE"|tr -d "'\`\"")
 MODELNAME=`xmllint --xpath '//Name/text()' $XML`
 RUNDATE=`xmllint --xpath '//RunDate/text()' $XML`
-OS_VERS=`xmllint --xpath '//OS/text()' $XML | cut -d '(' -f 1`
 CELLS=`xmllint --xpath '//NumberOfCells/text()' $XML`
 # HOSTNAME=`xmllint --xpath '//HostName/text()' $XML`
 NODES=`xmllint --xpath '//NumberOfHosts/text()' $XML`
@@ -114,8 +99,6 @@ MPI_VERSION_NUMBER=$(echo $MPI_VERSION | cut -d ' ' -f 2)
 SPEEDUP=`sed -n 's:.*<SpeedUp>\(.*\)</SpeedUp>.*:\1:p' $XML`
 AVERAGE_ELAPSED_TIME=`sed -n 's:.*<AverageElapsedTime Units=\"seconds\">\(.*\)</AverageElapsedTime>.*:\1:p' $XML`
 WORKERS=`sed -n 's:.*<NumberOfWorkers>\(.*\)</NumberOfWorkers>.*:\1:p' $XML`
-
-
 
 # Get number of benchmark runs and iterate through the results
 BENCH_RUNS=`xmllint --xpath '//NumberOfSamples/text()' $XML`
@@ -131,39 +114,5 @@ for RUNS in 1 $BENCH_RUNS; do
    SCALING=`echo "scale=2;$SPEEDUP_TEMP/$CORES_TEMP" | bc`
    NODES_TEMP=`echo "scale=0;$CORES_TEMP/$NUM_CORES" | bc`
 
-    #send data to autonomous data warehouse
-    echo benchITS: $benchITS
-    echo "Sending the following data to ADW..."
-    echo Unique Run ID: $UNIQUEID
-    echo Model Name: $MODEL
-    echo StarCCM Version: $StarCCM_Version
-    echo Instance: $INSTANCE
-    echo Hostname: $HOSTNAME
-    echo Nodes: $NODES
-    echo PPN: $PPN
-    echo Cores: $CORES
-    echo Cells: $CELLS
-    echo Average Elapsed Time: $AVERAGE_ELAPSED_TIME
-    echo Speedup: $SPEEDUP
-    echo Cells Per Core: $CELLSCORE
-    echo Scaling: $SCALING
-    echo Network: $NETWORK
-    echo Comment: $COMMENT
-    echo Run Date: $dt
-    echo MPI Name: $MPI_NAME
-    echo MPI Version: $MPI_VERSION
-    echo OFED Version: $OFED_VERS
-    echo OS Version: $OS_VERS
-    echo Kernel Version: $KERNEL_VERS
-    echo HPC Tools Version: $HPC_TOOLS_VERS
-    echo Image Version: $IMAGE_VERS
-    echo cmd_line $CMD_LINE
-    echo Model Version: $MODEL_VERS
-    echo Region: $REGION
-    echo Object Storage URL: $OBJSTR_PAR
-    echo Environment: $ENVIRONMENT
-    echo Customer Name: $CUSTOMER_NAME
-    echo POC: $POC
-    echo Image OCID: $IMAGE_OCID
 
 done
