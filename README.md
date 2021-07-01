@@ -106,7 +106,7 @@ The above baseline infrastructure provides the following specifications:
     -	36 cores per node
     -	384 GB memory per node
     
-# Upload LSDYNA binaries to Object Storage
+# Upload StarCCM+ binaries to Object Storage
 1. Log In
 
 You can start by logging in the Oracle Cloud console. If this is the first time, instructions to do so are available [here](https://docs.cloud.oracle.com/iaas/Content/GSG/Tasks/signingin.htm).
