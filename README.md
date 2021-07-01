@@ -131,58 +131,60 @@ Select the region in which you wish to create your Object Storage Bucket. Click 
 6. Add this PAR to the starccm_binaries variable.
 
 # Running STAR-CCM+
-Running Star-CCM+ is pretty straightforward: You can either start the GUI if you have a VNC session started with
-```
-/mnt/share/install/version/STAR-CCM+version/star/bin/starccm+
-```
-To specify the host you need to run on, you need to create a machinefile. You can generate it as follow, or manually. Format is hostname:corenumber.
-```
-sed 's/$/:36/' /etc/opt/oci-hpc/hostfile > machinefile
-```
-To run on multiple nodes, place the model.sim on the nfs-share drive (Ex:/mnt/nfs-share/work/) and replace the CORENUMBER and PODKEY.
-```
-/mnt/nfs-share/install/15.02.009/STAR-CCM+15.02.009/star/bin/starccm+ -batch -power\\ 
--licpath 1999@flex.cd-adapco.com -podkey PODKEY -np CORENUMBER 
--machinefile machinefile /mnt/nfs-share/work/model.sim
-```
-## MPI implementations and RDMA
-Performances can really differ depending on the MPI that you are using. 3 are supported by Star-CCM+ out of the box.
- *	IBM Platform MPI: Default or flag platform
- *	Open MPI: Flag intel
- *	Intel MPI: Flag openmpi3
-To specify options, you can use the flag -mppflags
-When using OCI RDMA on a Cluster Network, you will need to specify these options:
+# Install Intel MPI 2018 librairies
 
-### OpenMPI
-For RDMA:
+Run those commands on every node. 
 ```
--mca btl self -x UCX_TLS=rc,self,sm -x HCOLL_ENABLE_MCAST_ALL=0 -mca coll_hcoll_enable 0 -x UCX_IB_TRAFFIC_CLASS=105 -x UCX_IB_GID_INDEX=3 
+cd /nfs/cluster
+wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
+sudo rpm --import GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
+sudo yum-config-manager --add-repo=https://yum.repos.intel.com/mpi
+sudo yum install -y intel-mpi-2018.4-057 intel-mpi-samples-2018.4-274
 ```
-Additionaly, instead of disabling hyper-threading, you can also force the MPI to pin it on the first 36 cores:
+	
+# Running StarCCM+
+
+1. Navigate to Bastion - Find the public IP address of your remote host after the deployment job has finished:
+<details>
+	<summary>Resource Manager</summary>
+	<p></p>
+	If you deployed your stack via Resource Manager, find the public IP address of the compute node at the bottom of the CLI console logs.
+	<p></p>
+</details>
+<details>
+	<summary>Command Line</summary>
+	<p></p>
+	If you deployed your stack via Command Line, find the public IP address of the compute node at the bottom of the console logs on the <b>Logs</b> page, or on the <b>Outputs</b> page.
+	<p></p>
+</details>
+
+2. SSH into your bastion host 
 ```
---cpu-set 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35
-```
-### IntelMPI
-For RDMA:
-```
--mppflags "-iface enp94s0f0 -genv I_MPI_FABRICS=shm:dapl -genv DAT_OVERRIDE=/etc/dat.conf -genv I_MPI_DAT_LIBRARY=/usr/lib64/libdat2.so -genv I_MPI_DAPL_PROVIDER=ofa-v2-cma-roe-enp94s0f0 -genv I_MPI_FALLBACK=0"
-Additionaly, instead of disabling hyper-threading, you can also force the MPI to pin it on the first 36 cores:
--genv I_MPI_PIN_PROCESSOR_LIST=0-33 -genv I_MPI_PROCESSOR_EXCLUDE_LIST=36-71
+ssh -i PRIVATE KEY PATH opc@IP_ADDRESS
 ```
 
-### PlatformMPI
-For RDMA:
+3. SSH into cluster
 ```
--mppflags "-intra=shm -e MPI_HASIC_UDAPL=ofa-v2-cma-roe-enp94s0f0 -UDAPL"
+ssh hpc-node-1
 ```
-For better performances:
+
+3. Go to your model
 ```
--prot -aff:automatic:bandwidth
+cd /nfs/scratch/starccm/work
 ```
-To pin on the first 36 threads:
+
+7. To run, navigate to and run this [script](https://github.com/oracle-quickstart/oci-hpc-runbook-lsdyna/blob/main/Resources/LSDYNA_3car.sh)
 ```
--cpu_bind=MAP_CPU:0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19 ,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35
+/nfs/cluster/lsdyna/work
 ```
+Be sure to set execution permission before running the [script](https://github.com/oracle-quickstart/oci-hpc-runbook-starccm/blob/main/Resources/StarCCM_lemans_poly_17m.sh).
+
+Example:
+```
+chmod +x script.sh
+```
+
+Please make sure to update the script with your specific variables `line 17` - `line 28`
 
 # Benchmark Example
 <p align="center">
