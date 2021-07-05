@@ -4,7 +4,7 @@ title: StarCCM+ Quick-start on Oracle Cloud Infrastructure
 description: StarCCM+ on Oracle Cloud HPC cluster
 schemaVersion: 1.1.0
 version: "2021040901"
-informationalText: Automated HPC cluster deployment
+informationalText: StarCCM+ on Oracle Cloud HPC cluster
 logoUrl: https://cloudmarketplace.oracle.com/marketplace/content?contentId=80357668
 
 source:
@@ -865,3 +865,8 @@ variables:
         - ${add_nfs} 
         - not:
           - ${create_ffs}
+  release:
+    type: string
+    required: false
+    visible: false
+    title: "Reference Architecture Release (OCI Architecture Center)"
