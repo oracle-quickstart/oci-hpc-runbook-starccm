@@ -1,13 +1,9 @@
-## Copyright (c) 2021, Oracle and/or its affiliates.
-## All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
-
 resource "oci_core_vcn" "vcn" {
   count          = var.use_existing_vcn ? 0 : 1
   cidr_block     = var.vcn_subnet
   compartment_id = var.targetCompartment
   display_name   = "${local.cluster_name}_VCN"
   dns_label      = "cluster"
-  defined_tags   = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
 }
 
 resource "oci_core_security_list" "internal-security-list" {
@@ -24,23 +20,22 @@ resource "oci_core_security_list" "internal-security-list" {
     destination = "0.0.0.0/0"
   }
 
-  ingress_security_rules {
+  ingress_security_rules { 
     protocol = "1"
-    source   = "0.0.0.0/0"
-    icmp_options {
+    source = "0.0.0.0/0"
+    icmp_options { 
       type = "3"
       code = "4"
     }
   }
 
-  ingress_security_rules {
+  ingress_security_rules { 
     protocol = "1"
-    source   = var.vcn_subnet
-    icmp_options {
+    source = var.vcn_subnet
+    icmp_options { 
       type = "3"
     }
   }
-  defined_tags = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
 }
 
 resource "oci_core_security_list" "public-security-list" {
@@ -62,19 +57,19 @@ resource "oci_core_security_list" "public-security-list" {
     }
   }
 
-  ingress_security_rules {
+  ingress_security_rules { 
     protocol = "1"
-    source   = "0.0.0.0/0"
-    icmp_options {
+    source = "0.0.0.0/0"
+    icmp_options { 
       type = "3"
       code = "4"
     }
   }
 
-  ingress_security_rules {
+  ingress_security_rules { 
     protocol = "1"
-    source   = var.vcn_subnet
-    icmp_options {
+    source = var.vcn_subnet
+    icmp_options { 
       type = "3"
     }
   }
@@ -83,7 +78,6 @@ resource "oci_core_security_list" "public-security-list" {
     protocol    = "all"
     destination = "0.0.0.0/0"
   }
-  defined_tags = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
 }
 
 resource "oci_core_internet_gateway" "ig1" {
@@ -91,7 +85,6 @@ resource "oci_core_internet_gateway" "ig1" {
   vcn_id         = oci_core_vcn.vcn[0].id
   compartment_id = var.targetCompartment
   display_name   = "${local.cluster_name}_internet-gateway"
-  defined_tags   = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
 }
 
 resource "oci_core_nat_gateway" "ng1" {
@@ -99,7 +92,6 @@ resource "oci_core_nat_gateway" "ng1" {
   vcn_id         = oci_core_vcn.vcn[0].id
   compartment_id = var.targetCompartment
   display_name   = "${local.cluster_name}_nat-gateway"
-  defined_tags   = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
 }
 
 
@@ -112,7 +104,6 @@ resource "oci_core_service_gateway" "sg1" {
   services {
     service_id = data.oci_core_services.services.services[0]["id"]
   }
-  defined_tags = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
 }
 
 resource "oci_core_route_table" "public_route_table" {
@@ -126,7 +117,6 @@ resource "oci_core_route_table" "public_route_table" {
     destination_type  = "CIDR_BLOCK"
     network_entity_id = oci_core_internet_gateway.ig1[0].id
   }
-  defined_tags = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
 }
 
 resource "oci_core_route_table" "private_route_table" {
@@ -146,24 +136,22 @@ resource "oci_core_route_table" "private_route_table" {
     destination_type  = "SERVICE_CIDR_BLOCK"
     network_entity_id = oci_core_service_gateway.sg1[0].id
   }
-  defined_tags = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
 }
 
 resource "oci_core_subnet" "public-subnet" {
-  count = var.use_existing_vcn ? 0 : 1
+  count               = var.use_existing_vcn ? 0 : 1
   # availability_domain = var.ad
-  vcn_id            = oci_core_vcn.vcn[0].id
-  compartment_id    = var.targetCompartment
-  cidr_block        = trimspace(var.public_subnet)
-  security_list_ids = [oci_core_security_list.public-security-list[0].id]
-  dns_label         = "public"
-  display_name      = "${local.cluster_name}_public_subnet"
-  route_table_id    = oci_core_route_table.public_route_table[0].id
-  defined_tags      = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
+  vcn_id              = oci_core_vcn.vcn[0].id
+  compartment_id      = var.targetCompartment
+  cidr_block          = trimspace(var.public_subnet)
+  security_list_ids   = [oci_core_security_list.public-security-list[0].id]
+  dns_label           = "public"
+  display_name        = "${local.cluster_name}_public_subnet"
+  route_table_id      = oci_core_route_table.public_route_table[0].id
 }
 
 resource "oci_core_subnet" "private-subnet" {
-  count = var.use_existing_vcn ? 0 : 1
+  count                      = var.use_existing_vcn ? 0 : 1
   # availability_domain        = var.ad
   vcn_id                     = oci_core_vcn.vcn[0].id
   compartment_id             = var.targetCompartment
@@ -173,5 +161,4 @@ resource "oci_core_subnet" "private-subnet" {
   display_name               = "${local.cluster_name}_private_subnet"
   prohibit_public_ip_on_vnic = true
   route_table_id             = oci_core_route_table.private_route_table[0].id
-  defined_tags               = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
 }

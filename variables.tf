@@ -1,17 +1,5 @@
-## Copyright (c) 2021, Oracle and/or its affiliates.
-## All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
-
-variable "tenancy_ocid" {}
 variable "region" {}
-variable "fingerprint" {}
-variable "user_ocid" {}
-variable "private_key_path" {}
-
-variable "release" {
-  description = "Reference Architecture Release (OCI Architecture Center)"
-  default     = "1.0"
-}
-
+variable "tenancy_ocid" {}
 variable "targetCompartment" {}
 variable "ad" {}
 variable "ssh_key" {}
@@ -43,11 +31,12 @@ variable "vcn_id" { default = "" }
 variable "use_existing_vcn" {}
 variable "public_subnet_id" { default = "" }
 variable "private_subnet_id" { default = "" }
-variable "vcn_subnet" { default = "172.16.0.0/21" }
-variable "public_subnet" { default = "172.16.0.0/24" }
-variable "additional_subnet" { default = "172.16.1.0/24" }
-variable "private_subnet" { default = "172.16.4.0/22" }
+variable "vcn_subnet" { default = "" }
+variable "public_subnet" { default = "" }
+variable "additional_subnet" { default = "" }
+variable "private_subnet" { default = "" }
 variable "ssh_cidr" { default = "0.0.0.0/0" }
+#starccm
 variable "starccm" { default = true }
 variable "starccm_binaries" {}
 variable "starccm_version" {}
@@ -61,21 +50,21 @@ variable "instance_pool_custom_memory" { default = false }
 variable "bastion_memory" { default = 16 }
 variable "bastion_custom_memory" { default = false }
 variable "marketplace_listing" {
-  /* 
-  Allowed values
-   "1. Oracle Linux 7.8 OFED5.0"
-   "2. Oracle Linux 7.5 OFED4.4"
-*/
+  default = "1. Oracle Linux 7.9 OFED 5.3-1.0.0.1 RHCK 20210607"
+}
 
-  default = "1. Oracle Linux 7.8 OFED5.0"
+variable "marketplace_version_id" {
+  type = map(string)
+  default = {
+    "1" = "OL7.9-OFED5.3-1.0.0.1-RHCK-20210607"
+    "2" = "OL7.8-OFED5.0-1.0.0.0-UEK-20200826"
+    "3" = "OL7.7-OFED-4.4-2.0.7.0-UEK-20200229"
+    "4" = "OL7.9-OFED5.0-2.1.8.0-RHCK-20210709"
+  }
 }
 
 variable "marketplace_listing_id" {
-  type = map(string)
-  default = {
-    "1" = "ocid1.appcataloglisting.oc1..aaaaaaaahzcnanlki5vonyaeoiajjisejikzczygqqwheifymjqx3ft4iowa"
-    "2" = "ocid1.appcataloglisting.oc1..aaaaaaaahz2xiwfcsbebmqg7sp6lhdt6r2vsjro5jfukkl5cntlqvfhkbzaq"
-  }
+  default = "ocid1.appcataloglisting.oc1..aaaaaaaahzcnanlki5vonyaeoiajjisejikzczygqqwheifymjqx3ft4iowa"
 }
 
 variable "bastion_block_volume_performance" {
@@ -124,12 +113,12 @@ variable "monitoring" { default = true }
 
 variable "unsupported" {
   type    = bool
-  default = "false"
+  default = false
 }
 
 variable "unsupported_bastion" {
   type    = bool
-  default = "false"
+  default = false
 }
 
 variable "bastion_username" {
