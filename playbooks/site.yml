@@ -152,13 +152,14 @@
   tasks: 
     - include_role: 
         name: rdma-interface
+
+- hosts: compute
+  become: true
+  gather_facts: true
+  tasks: 
     - include_role: 
         name: hyperthreading
       when: not hyperthreading|default(true)|bool
-      
-    #- name: fix rdma0 not up bug  
-      #shell: "ifup rdma0"
-      
 
 - hosts: bastion
   tasks: 
@@ -171,7 +172,7 @@
     - include_role:
         name: starccm 
 
-- hosts: all
+- hosts: bastion
   vars:
     destroy: false
     initial: true
@@ -181,22 +182,21 @@
         name: spack
       when: spack|default(false)|bool
     - include_role: 
+        name: telegraf
+      when: monitoring|default(false)|bool
+    - include_role: 
+        name: slurm
+      when: slurm|default(false)|bool
+
+- hosts: compute
+  vars:
+    destroy: false
+    initial: true
+    download_path: "{{ '/nfs/cluster/' if cluster_nfs|bool else '/tmp' }}"
+  tasks: 
+    - include_role: 
         name: slurm
       when: slurm|default(false)|bool
     - include_role: 
         name: telegraf
       when: monitoring|default(false)|bool
-      
-    - name: create machinefile
-      shell: "sed 's/$/:36/' /etc/opt/oci-hpc/hostfile > machinefile"
-      args:
-        chdir: "/nfs/scratch/starccm/work"
-
-
-
-
-
-
-
-
-         

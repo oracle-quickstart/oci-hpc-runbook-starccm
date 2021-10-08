@@ -64,9 +64,9 @@
  
 # Post Installation 
 
-- name: make work directory
+- name: make models directory
   ansible.builtin.file:
-    path: "/nfs/scratch/starccm/work"
+    path: "/nfs/scratch/starccm/models"
     state: directory
     recurse: yes
     owner: opc
@@ -76,15 +76,15 @@
 - name: download model 
   get_url: 
     url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/OjEMcLVIPEVfnWsFAmdiqUYEAbnJn9w1fQp6L094tQc/n/hpc/b/starccm_benchmarks/o/lemans_poly_17m.amg.sim.tar"
-    dest: "/nfs/scratch/starccm/work"
+    dest: "/nfs/scratch/starccm/models"
     mode: '0777' 
 
 - name: untar model
   unarchive: 
     src: "{{ item }}" 
-    dest: "/nfs/scratch/starccm/work" 
+    dest: "/nfs/scratch/starccm/models" 
   with_fileglob:
-    - "/nfs/scratch/starccm/work/*"
+    - "/nfs/scratch/starccm/models/*"
 
 
 
