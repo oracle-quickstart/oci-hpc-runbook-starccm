@@ -40,8 +40,8 @@ If you don't have the required permissions and quota, contact your tenancy admin
 ### Clone the Module
 Now, you'll want a local copy of this repo. You can make that with the commands:
 
-    git clone https://github.com/oracle-quickstart/oci-hpc-runbook-lsdyna.git
-    cd oci-hpc-runbook-lsdyna
+    git clone https://github.com/oracle-quickstart/oci-hpc-runbook-starccm.git
+    cd oci-hpc-runbook-starccm
     ls
 
 ### Set Up and Configure Terraform
