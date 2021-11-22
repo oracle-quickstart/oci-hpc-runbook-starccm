@@ -1,6 +1,3 @@
-## Copyright © 2021, Oracle and/or its affiliates. 
-## All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
-
 data "template_file" "bastion_config" {
   template = file("config.bastion")
   vars = {
