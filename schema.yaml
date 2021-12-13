@@ -1,12 +1,9 @@
-## Copyright © 2021, Oracle and/or its affiliates. 
-## All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
-
 ---
-title: StarCCM+ Quick-start on Oracle Cloud Infrastructure
-description: StarCCM+ on Oracle Cloud HPC cluster
+title: StarCCM+
+description: Install StarCCM+ on an HPC Cluster
 schemaVersion: 1.1.0
 version: "2021040901"
-informationalText: StarCCM+ on Oracle Cloud HPC cluster
+informationalText: Automated HPC cluster deployment
 logoUrl: https://cloudmarketplace.oracle.com/marketplace/content?contentId=80357668
 
 source:
@@ -740,7 +737,6 @@ variables:
       not:
         - ${use_existing_vcn}
   
-
   #starccm
   starccm:
     type: boolean
@@ -891,8 +887,3 @@ variables:
         - ${add_nfs} 
         - not:
           - ${create_ffs}
-  release:
-    type: string
-    required: false
-    visible: false
-    title: "Reference Architecture Release (OCI Architecture Center)"
