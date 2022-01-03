@@ -1,5 +1,15 @@
-variable "region" {}
+## Copyright © 2022, Oracle and/or its affiliates. 
+## All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
+
+variable "release" {
+  description = "Reference Architecture Release (OCI Architecture Center)"
+  default     = "1.1"
+}
 variable "tenancy_ocid" {}
+variable "region" {}
+variable "fingerprint" {}
+variable "user_ocid" {}
+variable "private_key_path" {}
 variable "targetCompartment" {}
 variable "ad" {}
 variable "ssh_key" {}
@@ -31,10 +41,10 @@ variable "vcn_id" { default = "" }
 variable "use_existing_vcn" {}
 variable "public_subnet_id" { default = "" }
 variable "private_subnet_id" { default = "" }
-variable "vcn_subnet" { default = "" }
-variable "public_subnet" { default = "" }
-variable "additional_subnet" { default = "" }
-variable "private_subnet" { default = "" }
+variable "vcn_subnet" { default = "172.16.0.0/21" }
+variable "public_subnet" { default = "172.16.0.0/24" }
+variable "additional_subnet" { default = "172.16.1.0/24" }
+variable "private_subnet" { default = "172.16.4.0/22" }
 variable "ssh_cidr" { default = "0.0.0.0/0" }
 #starccm
 variable "starccm" { default = true }
