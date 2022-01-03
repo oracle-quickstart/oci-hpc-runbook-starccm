@@ -140,3 +140,8 @@ variable "compute_username" {
   type    = string
   default = "opc"
 }
+
+variable "release" {
+  description = "Reference Architecture Release (OCI Architecture Center)"
+  default     = "1.1"
+}

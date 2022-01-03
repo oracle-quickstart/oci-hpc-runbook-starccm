@@ -43,5 +43,6 @@ resource "oci_core_instance_configuration" "instance_pool_configuration" {
   }
 
   source = "NONE"
+  defined_tags = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
 }
 
