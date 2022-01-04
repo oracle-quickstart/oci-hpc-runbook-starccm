@@ -4,17 +4,17 @@
 provider "oci" {
   tenancy_ocid     = var.tenancy_ocid
   region           = var.region
-  fingerprint      = var.fingerprint
-  user_ocid        = var.user_ocid
-  private_key_path = var.private_key_path
+  api_fingerprint      = var.api_fingerprint
+  api_user_ocid        = var.api_user_ocid
+  api_user_key = var.api_user_key
 }
 
 provider "oci" {
   alias                = "homeregion"
   tenancy_ocid         = var.tenancy_ocid
-  user_ocid            = var.user_ocid
-  fingerprint          = var.fingerprint
-  private_key_path     = var.private_key_path
+  api_user_ocid          = var.api_user_ocid
+  api_fingerprint          = var.api_fingerprint
+  api_user_key     = var.api_user_key
   region               = data.oci_identity_region_subscriptions.home_region_subscriptions.region_subscriptions[0].region_name
   disable_auto_retries = "true"
 }
