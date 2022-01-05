@@ -132,6 +132,11 @@ variableGroups:
     variables: 
       - ${configure}
 variables:
+  release:
+    title: "OCI Architecture Release"
+    description: "OCI Architecture Release"
+    type: string
+    visible: false
   targetCompartment:
     title: "target compartment"
     type: oci:identity:compartment:id
