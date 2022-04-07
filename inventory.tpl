@@ -13,8 +13,8 @@ bastion
 compute
 [all:vars]
 ansible_connection=ssh
-rdma_network=192.168.168.0
-rdma_netmask=255.255.252.0
+rdma_network=${rdma_network}
+rdma_netmask=${rdma_netmask}
 public_subnet=${public_subnet} 
 private_subnet=${private_subnet}
 nvme_path=/mnt/localdisk/
@@ -39,8 +39,14 @@ nfs_source_IP=${nfs_source_IP}
 nfs_source_path=${nfs_source_path}
 nfs_options=${nfs_options}
 instance_pool_ocpus=${instance_pool_ocpus}
+queue=${queue}
 monitoring=${monitoring}
 hyperthreading=${hyperthreading}
 ldap=${ldap}
+autoscaling_monitoring=${autoscaling_monitoring}
+autoscaling_mysql_service=${autoscaling_mysql_service}
+monitoring_mysql_ip=${monitoring_mysql_ip}
+admin_password = ${admin_password}
+admin_username = ${admin_username}
 starccm_binaries=${starccm_binaries}
 starccm_version=${starccm_version}

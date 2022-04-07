@@ -87,8 +87,6 @@
       when: cluster_nfs|default(true)|bool
     - include_role: 
         name: mysql
-    - include_role: 
-        name: cron
       
 - hosts: nfs
   become: true
@@ -159,7 +157,6 @@
   tasks: 
     - include_role: 
         name: hyperthreading
-      when: not hyperthreading|default(true)|bool
 
 - hosts: bastion
   tasks: 
@@ -169,14 +166,27 @@
     - include_role: 
         name: grafana
       when: monitoring|default(false)|bool
-    - include_role:
-        name: starccm 
+    - include_role: 
+        name: starccm
 
 - hosts: bastion
+  tasks:
+    - include_role: 
+        name: yaml
+      when: slurm|default(false)|bool    
+    - include_role: 
+        name: autoscaling_mon
+      when: autoscaling_monitoring|default(false)|bool and autoscaling|default(false)|bool
+    - include_role: 
+        name: cron
+      
+- hosts: all
   vars:
     destroy: false
     initial: true
     download_path: "{{ '/nfs/cluster/' if cluster_nfs|bool else '/tmp' }}"
+  vars_files:
+    - "/opt/oci-hpc/autoscaling/queues.conf"
   tasks: 
     - include_role: 
         name: spack
@@ -187,16 +197,4 @@
     - include_role: 
         name: slurm
       when: slurm|default(false)|bool
-
-- hosts: compute
-  vars:
-    destroy: false
-    initial: true
-    download_path: "{{ '/nfs/cluster/' if cluster_nfs|bool else '/tmp' }}"
-  tasks: 
-    - include_role: 
-        name: slurm
-      when: slurm|default(false)|bool
-    - include_role: 
-        name: telegraf
-      when: monitoring|default(false)|bool
+    

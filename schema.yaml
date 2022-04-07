@@ -32,22 +32,7 @@ variableGroups:
       - ${bastion_ocpus}
       - ${bastion_custom_memory}
       - ${bastion_memory}
-      - ${use_standard_image}
-      - ${unsupported_bastion}
-      - ${bastion_image_compartment}
-      - ${custom_bastion_image}
-      - ${unsupported_bastion_image}
-      - ${bastion_username}
       - ${bastion_boot_volume_size}
-  - title: "Advanced headnode options"
-    variables:
-      - ${bastion_advanced}
-      - ${home_nfs} 
-      - ${use_cluster_nfs}
-      - ${cluster_nfs_path}
-      - ${bastion_block}
-      - ${bastion_block_volume_size}
-      - ${bastion_block_volume_performance}
   - title: "Compute node options"
     variables:
       - ${ad}
@@ -57,7 +42,6 @@ variableGroups:
       - ${instance_pool_ocpus}
       - ${instance_pool_custom_memory}
       - ${instance_pool_memory}
-      - ${autoscaling}
       - ${node_count}
       - ${hyperthreading}
       - ${boot_volume_size}
@@ -68,13 +52,26 @@ variableGroups:
       - ${compute_image_compartment}
       - ${image}
       - ${image_ocid}
+  - title: Autoscaling
+    variables:
+      - ${autoscaling}
+      - ${autoscaling_monitoring}
   - title: "API authentication"
     variables:
       - ${inst_prin}
       - ${api_user_ocid}
       - ${api_fingerprint}
       - ${api_user_key}
-    visible: ${autoscaling}
+  - title: "Monitoring"
+    variables: 
+      - ${autoscaling_mysql_service}
+      - ${monitoring_shape_name}
+      - ${admin_username}
+      - ${admin_password}
+    visible: 
+      and:
+        - ${autoscaling_monitoring}
+        - ${autoscaling}
   - title: "Additional file system"
     variables:
       - ${add_nfs}
@@ -85,9 +82,24 @@ variableGroups:
       - ${nfs_options}
       - ${fss_compartment}
       - ${fss_ad}
+  - title: "Advanced bastion options"
+    variables:
+      - ${advanced_bastion}
+      - ${use_standard_image}
+      - ${unsupported_bastion}
+      - ${bastion_image_compartment}
+      - ${custom_bastion_image}
+      - ${unsupported_bastion_image}
+      - ${bastion_username}
   - title: "Advanced storage options"
     variables:
       - ${use_advanced}
+      - ${home_nfs} 
+      - ${use_cluster_nfs}
+      - ${cluster_nfs_path}
+      - ${bastion_block}
+      - ${bastion_block_volume_size}
+      - ${bastion_block_volume_performance}
       - ${use_scratch_nfs}
       - ${scratch_nfs_path}
       - ${scratch_nfs_type_cluster}
@@ -103,8 +115,9 @@ variableGroups:
       - ${private_subnet_id}
       - ${vcn_subnet}
       - ${public_subnet}
-      - ${additional_subnet}
       - ${private_subnet}
+      - ${rdma_subnet}
+      - ${additional_subnet}
   - title: "Applications"
     variables:
       - ${starccm}
@@ -113,6 +126,7 @@ variableGroups:
   - title: "Software"
     variables:
       - ${slurm}
+      - ${queue}
       - ${spack}
       - ${monitoring}
   - title: "Hidden"
@@ -127,20 +141,17 @@ variableGroups:
       - ${ssh_cidr}
       - ${marketplace_source_images}
       - ${marketplace_version_id}
+      - ${bastion_listing}
     visible: false
   - title: "Debug"
     variables: 
       - ${configure}
 variables:
-  release:
-    title: "OCI Architecture Release"
-    description: "OCI Architecture Release"
-    type: string
-    visible: false
   targetCompartment:
     title: "target compartment"
     type: oci:identity:compartment:id
     default: ${compartment_ocid}
+    required: true
   ad:
     type: oci:identity:availabilitydomain:name
     visible: complexExpression
@@ -149,29 +160,31 @@ variables:
     required: true
     description: "Availability Domain"
     title: "Availability Domain"
+    
   ssh_key:
     type: oci:core:ssh:publickey
     title: "Public SSH key"
+    description: "Public SSH key"
     required: true
   use_custom_name:
     type: boolean
     title: "use custom cluster name"
     description: "Use custom name for the cluster"
-    required: true
     default: false
   ldap:
     type: boolean
     title: "Configure LDAP authentication from bastion"
     description: "When selected nodes will be configured to use LDAP authentication. User and group management can be performed using cluster commands."
-    required: true
     default: true
   cluster_name:
     title: "Name of the cluster"
     description: "Custom cluster name"
+    default: ""
     type: string
     visible:
       and:
         - ${use_custom_name}
+    required: true
   bastion_ad:
     type: oci:identity:availabilitydomain:name
     dependsOn:
@@ -180,11 +193,13 @@ variables:
     required: true
     description: "Availability Domain for bastion host"
     title: "Availability Domain"
-    default: ${ad}
+    #default: ${ad}
   bastion_shape:
     type: oci:core:instanceshape:name
     dependsOn:
       compartmentId: ${targetCompartment}
+    required: true
+    default: VM.Standard2.4
   bastion_ocpus:
     type: integer
     description: Number of OCPU's for flex shape
@@ -203,7 +218,10 @@ variables:
           - eq:
             - ${bastion_shape}
             - "VM.Optimized3.Flex"
-    required: false
+          - eq: 
+            - ${bastion_shape}
+            - "VM.Standard.A1.Flex"
+    required: true
   bastion_custom_memory: 
     title: Use custom memory size
     type: boolean
@@ -220,6 +238,9 @@ variables:
           - eq: 
             - ${bastion_shape}
             - "VM.Standard.E4.Flex"
+          - eq: 
+            - ${bastion_shape}
+            - "VM.Standard.A1.Flex"
   bastion_memory:
     title: Memory in GBS
     type: integer
@@ -240,16 +261,23 @@ variables:
             - eq: 
               - ${bastion_shape}
               - "VM.Standard.E4.Flex"
+            - eq: 
+              - ${bastion_shape}
+              - "VM.Standard.A1.Flex"
         - and: 
             - ${bastion_custom_memory}
-    required: false
+    required: true
+
   use_standard_image:
     type: boolean
     title: "use standard bastion image"
     description: >
       "Use standard bastion image, otherwise provide custom image OCID"
-    required: true
     default: true
+    visible: 
+      and: 
+        - and: 
+              - ${advanced_bastion}
 
   unsupported_bastion: 
     title: "Use unsupported image" 
@@ -265,6 +293,7 @@ variables:
     description: "Custom image ID for Bastion"
     type: string
     default: "opc"
+    required: true
     visible:
       not:
         - ${use_standard_image}
@@ -279,6 +308,7 @@ variables:
         - ${unsupported_bastion}
         - not: 
             - ${use_standard_image}
+    default: "image.ocid"
   
   bastion_image_compartment:
     title: "bastion image compartment"
@@ -290,6 +320,7 @@ variables:
               - ${use_standard_image}
           - not: 
               - ${unsupported_bastion}
+    required: true
 
   custom_bastion_image:
     title: "Bastion Image ID"
@@ -303,6 +334,7 @@ variables:
               - ${use_standard_image}
           - not: 
               - ${unsupported_bastion}
+    required: true
 
   bastion_boot_volume_size:
     type: integer
@@ -310,18 +342,13 @@ variables:
     minimum: 50
     title: "Size of the boot volume in GB"
     default: 50
-  bastion_advanced:
-    type: boolean
-    title: Show advanced options
-    default: false
   bastion_block:
     type: boolean
     title: Additional block volume for shared space
     visible:
       and:
-        - ${bastion_advanced}
+        - ${use_advanced}
     default: false
-    required: true
   bastion_block_volume_size:
     required: true
     type: integer
@@ -331,7 +358,7 @@ variables:
       and:
         - and:
             - ${bastion_block}
-            - ${bastion_advanced}
+            - ${use_advanced}
   bastion_block_volume_performance:
     type: enum
     title: "Block volume performance"
@@ -345,20 +372,20 @@ variables:
       and:
         - and:
             - ${bastion_block}
-            - ${bastion_advanced}
+            - ${use_advanced}
   home_nfs:
     type: boolean
     title: "shared NFS /home from bastion"
     visible:
       and:
-        - ${bastion_advanced}
+        - ${use_advanced}
     default: true
   use_cluster_nfs:
     type: boolean
     title: "shared NFS volume from bastion"
     visible:
       and:
-        - ${bastion_advanced}
+        - ${use_advanced}
     default: true
   cluster_nfs_path:
     title: "Cluster share mount point"
@@ -367,8 +394,9 @@ variables:
     type: string
     visible:
       and:
-        - ${bastion_advanced}
+        - ${use_advanced}
         - ${use_cluster_nfs}
+    reguired: true
   cluster_network:
     title: Use cluster network
     type: boolean
@@ -392,6 +420,7 @@ variables:
   instance_pool_shape:
     title: "Shape of the Compute Nodes"
     required: true
+    default: "VM.Standard2.4"
     type: oci:core:instanceshape:name
     dependsOn:
       compartmentId: ${targetCompartment}
@@ -419,7 +448,10 @@ variables:
           - eq: 
             - ${instance_pool_shape}
             - "VM.Standard.E4.Flex"
-    required: false
+          - eq: 
+            - ${instance_pool_shape}
+            - "VM.Standard.A1.Flex"
+    required: true
 
   instance_pool_custom_memory: 
     title: Use custom memory size
@@ -437,6 +469,9 @@ variables:
           - eq: 
             - ${instance_pool_shape}
             - "VM.Standard.E4.Flex"
+          - eq: 
+            - ${instance_pool_shape}
+            - "VM.Standard.A1.Flex"
   instance_pool_memory:
     title: Memory in GBS
     type: integer
@@ -457,9 +492,12 @@ variables:
             - eq: 
               - ${instance_pool_shape}
               - "VM.Standard.E4.Flex"
+            - eq: 
+              - ${instance_pool_shape}
+              - "VM.Standard.A1.Flex"
         - and: 
             - ${instance_pool_custom_memory}
-    required: false
+    required: true
 
   node_count:
     required: true
@@ -470,9 +508,8 @@ variables:
     description: "Number of Compute Instances (Permanent Cluster when autoscaling)"
 
   hyperthreading:
-    required: true
     type: boolean
-    title: "Keep Hyperthreading enabled"
+    title: "Hyperthreading enabled"
     default: true
     description: "When unchecked SMT will be disabled" 
 
@@ -488,7 +525,6 @@ variables:
     type: boolean
     title: "use marketplace image"
     description: "Use marketplace image, otherwise provide custom image OCID"
-    required: true
     default: true
 
   marketplace_listing:
@@ -505,6 +541,13 @@ variables:
     visible:
       and:
         - ${use_marketplace_image}
+
+  bastion_listing:
+    type: string
+    title: "Bastion Image version"
+    description: "Marketplace listing to use"
+    required: true
+    default: "4. Oracle Linux 7.9 OFED 5.0-2.1.8.0 RHCK 20210709"
 
   compute_image_compartment:
     title: "compute image compartment"
@@ -537,8 +580,9 @@ variables:
     type: string
     default: "opc"
     visible:
-      not:
-        - ${use_marketplace_image}
+      and: 
+        - not:
+            - ${use_marketplace_image}
 
   unsupported: 
     title: "Use unsupported image" 
@@ -546,9 +590,10 @@ variables:
     type: boolean
     default: false
     visible:
-      not:
-        - ${use_marketplace_image}
- 
+      and: 
+        - not:
+            - ${use_marketplace_image}
+
   image_ocid:
     title: "Image OCID"
     description: "Custom image ID for compute nodes"
@@ -556,12 +601,21 @@ variables:
     required: true
     visible:
       and: 
-        - ${unsupported}
+        - not:
+            - ${use_marketplace_image}
+        - and: 
+            - ${unsupported}
+
+  advanced_bastion:
+    type: boolean
+    title: "Show advanced bastion options"
+    default: false
 
   use_advanced:
     type: boolean
-    title: "Show advanced options"
+    title: "Show advanced storage options"
     default: false
+
   use_scratch_nfs:
     type: boolean
     title: "Shared NFS scratch space from NVME or Block volume"
@@ -569,6 +623,7 @@ variables:
       and:
         - ${use_advanced}
     default: true
+
   scratch_nfs_type_cluster:
     type: enum
     title: "Scratch storage configuration"
@@ -582,6 +637,7 @@ variables:
         - ${cluster_network}
         - ${use_advanced}
         - ${use_scratch_nfs}
+    required: true
   scratch_nfs_type_pool:
     type: enum
     title: "Scratch storage configuration"
@@ -589,6 +645,7 @@ variables:
       - "none"
       - "block"
     default: "none"
+    required: true
     visible:
       and: 
         - not:
@@ -656,6 +713,7 @@ variables:
     title: "NFS scratch space mount point"
     description: "Path to NFS share"
     default: "/nfs/scratch"
+    required: true
     type: string
     visible:
       and:
@@ -666,12 +724,12 @@ variables:
     title: "Use Existing VCN"
     description: "Use existing VCN or create new one"
     default: false
-    required: true
   vcn_compartment:
     title: "VCN compartment"
     type: oci:identity:compartment:id
     visible: ${use_existing_vcn}
     default: ${targetCompartment}
+    required: true
   vcn_id:
     type: oci:core:vcn:id
     visible:
@@ -689,6 +747,7 @@ variables:
       vcnId: ${vcn_id}
       hidePrivateSubnet: true
     visible: ${use_existing_vcn}
+    required: true
   private_subnet_id:
     type: oci:core:subnet:id
     dependsOn:
@@ -696,6 +755,7 @@ variables:
       vcnId: ${vcn_id}
       hidePublicSubnet: true
     visible: ${use_existing_vcn}
+    required: true
   vcn_subnet:
     type: string
     title: "VCN IP range"
@@ -723,6 +783,12 @@ variables:
     visible:
       not:
         - ${use_existing_vcn}
+  rdma_subnet:
+    type: string
+    title: "RDMA subnet IP range"
+    default: "192.168.168.0/22"
+    description: "Must be the same size as private subnet"
+    required: true
   private_subnet:
     type: string
     title: "Private subnet IP range"
@@ -738,10 +804,11 @@ variables:
     default: "0.0.0.0/0"
     description: "Allowed SSH network in CIDR notation"
     required: true
-    visible:
-      not:
-        - ${use_existing_vcn}
-  
+#   visible:
+#     not:
+#       - ${use_existing_vcn}
+
+
   #starccm
   starccm:
     type: boolean
@@ -762,8 +829,17 @@ variables:
   slurm:
     type: boolean
     title: "Install SLURM"
-    default: true
+    default: false
     description: "Needed for autoscaling" 
+
+  queue:
+    type: String
+    title: "Queue Name"
+    default: "compute"
+    required: true
+    description: "Add the permanent cluster to a specific queue, workq is the default queue" 
+    visible:
+        - ${slurm}
 
   spack:
     type: boolean
@@ -785,20 +861,18 @@ variables:
     
   inst_prin:
     type: boolean
-    title: "Use Instance Principal" 
-    description: "You will need to set a dynamic group and policy to allow the bastion to authenticate " 
+    title: "Use Instance Principal (required for autoscaling)" 
+    description: "You will need to set a dynamic group and policy to allow the bastion to authenticate. This will not be created automatically." 
     default: true
-    visible:
-      and:
-        - ${autoscaling}
 
   api_user_key:
-    type: string
-    title: "API key"
+    type: file
+    title: "API private key"
     default: ""
     visible:
       not:
         - ${inst_prin}
+    required: true
 
   api_fingerprint:
     type: string
@@ -807,6 +881,7 @@ variables:
     visible:
       not:
         - ${inst_prin}
+    required: true
 
   api_user_ocid:
     type: string
@@ -815,6 +890,7 @@ variables:
     visible:
       not:
         - ${inst_prin}
+    required: true
         
   configure: 
     type: boolean
@@ -841,6 +917,7 @@ variables:
     description: "Compartment to add the FSS Mount Target and File System"
     type: oci:identity:compartment:id
     default: ${targetCompartment}
+    required: true
     visible: 
       and:
         - ${add_nfs}
@@ -857,6 +934,7 @@ variables:
     default: ${ad}
     description: "FSS Availability Domain"
     title: "FSS Availability Domain"
+    required: true
         
   nfs_target_path:
     type: string
@@ -866,10 +944,12 @@ variables:
     visible: 
       and:
         - ${add_nfs}
+    required: true
   nfs_source_IP:
     type: string
     title: "NFS server IP"
     default: "0.0.0.0"
+    required: true
     description: "IP address of the NFS server"
     visible: 
       and:
@@ -882,6 +962,7 @@ variables:
     default: "/app"
     description: "Value of the path on the NFS server"
     visible: ${add_nfs}
+    required: true
   nfs_options:
     type: string
     title: "Options"
@@ -892,3 +973,52 @@ variables:
         - ${add_nfs} 
         - not:
           - ${create_ffs}
+    required: true
+  monitoring_shape_name:
+    type: string
+    title: "MySQL Shape Name"
+    default: "MySQL.VM.Standard.E3.1.16GB"
+    required: true
+    description: "MySQL Shape Name"
+    visible: 
+      and:
+        - ${autoscaling_mysql_service} 
+    
+  admin_username:
+    type: string
+    title: "MySQL Monitoring username"
+    default: "admin"
+    required: true
+    description: ""
+    visible: 
+      and:
+        - ${autoscaling_mysql_service}
+
+  admin_password:
+    title: "MySQL Monitoring password"
+    default: "Monitor2021!"
+    description: "" 
+    visible: 
+      and:
+        - ${autoscaling_mysql_service}
+    required: true
+
+  autoscaling_monitoring:
+    type: boolean
+    title: "Monitor the autoscaling"
+    default: false
+    description: ""
+    visible: 
+      and:
+        - ${autoscaling}
+
+  autoscaling_mysql_service:
+    type: boolean
+    title: "Create a Mysql Service"
+    default: false
+    description: "false will use the bastion as mysqlDB"
+    visible: 
+      and:
+        - ${autoscaling}
+        - ${autoscaling_monitoring}
+
