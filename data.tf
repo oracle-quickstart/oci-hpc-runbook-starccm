@@ -46,7 +46,7 @@ data "oci_core_subnet" "private_subnet" {
 data "oci_core_subnet" "public_subnet" { 
   subnet_id = local.bastion_subnet_id
 } 
- 
+
 data "oci_core_images" "linux" {
   compartment_id = var.targetCompartment
   operating_system = "Oracle Linux"
@@ -57,15 +57,5 @@ data "oci_core_images" "linux" {
     regex = true
   }
 }
-
-data "oci_identity_region_subscriptions" "home_region_subscriptions" {
-  tenancy_id = var.tenancy_ocid
-
-  filter {
-    name   = "is_home_region"
-    values = [true]
-  }
-}
-
 
 

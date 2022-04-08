@@ -15,6 +15,7 @@ export TF_VAR_boot_volume_size=50
 export TF_VAR_node_count=1
 export TF_VAR_use_marketplace_image=true
 export TF_VAR_use_standard_image=true
+export TF_VAR_cluster_network_shape="BM.HPC2.36"
 
 # set   TF_VAR_ variables: $ source env.sh
 # unset TF_VAR_ variables: $ unset ${!TF_VAR_@}

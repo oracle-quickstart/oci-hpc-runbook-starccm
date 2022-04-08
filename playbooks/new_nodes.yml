@@ -15,6 +15,7 @@
     destroy: false
   gather_facts: true
   roles: 
+    - oci-cloud-agent
     - packages
     - oci-legacy
     - firewall 
@@ -126,7 +127,9 @@
     destroy: false
     initial: false
     download_path: "{{ '/nfs/cluster/' if cluster_nfs|bool else '/tmp' }}"
-  tasks: 
+  vars_files:
+    - "/opt/oci-hpc/autoscaling/queues.conf"
+  tasks:
     - include_role: 
         name: spack
       when: spack|default(false)|bool

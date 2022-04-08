@@ -1,4 +1,4 @@
----
+--- 
 
 # tasks file for starccm
 
@@ -19,7 +19,7 @@
     mode: 0770
 
 - name: untar starccm binaries
-  unarchive: 
+  ansible.builtin.unarchive: 
     src: "{{ item }}" 
     dest: "/nfs/scratch/starccm/install" 
   with_fileglob:
@@ -44,12 +44,12 @@
 
 - name: download model 
   get_url: 
-    url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/OjEMcLVIPEVfnWsFAmdiqUYEAbnJn9w1fQp6L094tQc/n/hpc/b/starccm_benchmarks/o/lemans_poly_17m.amg.sim.tar"
+    url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/2-6pVgv_kKDp4bxkEIG1b6LPN1FcnvGL8sR-DvK0FmrkA4XHnSNIwMUW_kWwOHXp/n/hpc/b/starccm_benchmarks/o/lemans_poly_17m.amg.sim.tar"
     dest: "/nfs/scratch/starccm/models"
     mode: '0777' 
 
 - name: untar model
-  unarchive: 
+  ansible.builtin.unarchive: 
     src: "{{ item }}" 
     dest: "/nfs/scratch/starccm/models" 
   with_fileglob:
